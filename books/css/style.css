@@ -1,0 +1,211 @@
+/* ======================================================
+   RESET & BASE
+====================================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  background: #fff;
+  color: #333;
+  line-height: 1.5;
+}
+
+
+/* ======================================================
+   BREADCRUMB
+====================================================== */
+.breadcrumb {
+  padding: 20px 40px;
+  font-size: 14px;
+  color: #888;
+}
+
+
+/* ======================================================
+   PRODUCT SECTION
+====================================================== */
+.product {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+
+  display: grid;
+  grid-template-columns: 80px 1fr 1fr;
+  gap: 40px;
+}
+
+/* Thumbnails */
+.thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.thumb {
+  width: 70px;
+  height: 70px;
+  background: #eee;
+  cursor: pointer;
+  transition: opacity .2s ease;
+}
+
+.thumb:hover {
+  opacity: .7;
+}
+
+/* Main Image */
+.main-image {
+  height: 450px;
+  background: #f7f1e6;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: bold;
+}
+
+
+/* ======================================================
+   PRODUCT INFO
+====================================================== */
+.price {
+  margin: 15px 0;
+}
+
+.old {
+  margin-right: 10px;
+  text-decoration: line-through;
+  color: #aaa;
+}
+
+.new {
+  font-size: 22px;
+  font-weight: bold;
+  color: #e86b4c;
+}
+
+
+/* ======================================================
+   CART
+====================================================== */
+.cart {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cart button {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+}
+
+.cart button:hover {
+  background: #f5f5f5;
+}
+
+.add {
+  background: #f4b6a6;
+  border: none;
+}
+
+.add:hover {
+  background: #eaa191;
+}
+
+
+/* ======================================================
+   TABS
+====================================================== */
+.tabs {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 40px;
+}
+
+.tab-head {
+  display: flex;
+  gap: 30px;
+  border-bottom: 1px solid #eee;
+}
+
+.tab-head button {
+  padding: 15px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #777;
+  font-size: 15px;
+}
+
+.tab-head button:hover {
+  color: #000;
+}
+
+.tab-head .active {
+  color: #000;
+  border-bottom: 2px solid #e86b4c;
+}
+
+.tab-content {
+  padding: 25px 0;
+  color: #666;
+}
+
+
+/* ======================================================
+   RELATED PRODUCTS
+====================================================== */
+.related {
+  max-width: 1200px;
+  margin: 60px auto;
+  padding: 0 40px;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+.related-card {
+  text-align: center;
+}
+
+.related-img {
+  height: 220px;
+  background: #f7f1e6;
+  margin-bottom: 10px;
+}
+
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+@media (max-width: 1000px) {
+  .product {
+    grid-template-columns: 1fr;
+  }
+
+  .related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

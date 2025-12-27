@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Login Overlay -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-container">
+            <img src="./assets/img/logo.png" alt="Logo">
+            <h2>Admin Login</h2>
+            <p>Enter your password to access the admin panel</p>
+            <form class="login-form" id="loginForm">
+                <input type="password" id="passwordInput" placeholder="Enter password" required autofocus>
+                <div class="error-message" id="errorMessage">Incorrect password. Please try again.</div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Content (hidden until authenticated) -->
+    <div class="admin-content" id="adminContent">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="./assets/img/logo.png" alt="Logo">
+            <h2>Admin Panel</h2>
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active" data-section="dashboard">
+                Dashboard
+            </a></li>
+            <li><a href="#" data-section="books">
+                Books
+            </a></li>
+            <li><a href="#" data-section="images">
+                Images
+            </a></li>
+            <li><a href="./index.html">
+                Back to Site
+            </a></li>
+            <li><a href="#" id="sidebarLogoutBtn">
+                Logout
+            </a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="header">
+            <h1 id="page-title">Dashboard</h1>
+            <div class="header-right">
+                <div class="user-info">
+                    <div class="user-avatar">A</div>
+                    <div>
+                        <div style="font-weight: bold; color: #1a2b4a;">Admin User</div>
+                        <div style="font-size: 12px; color: #666;">Administrator</div>
+                    </div>
+                </div>
+                <button class="btn-logout" id="logoutBtn">
+                    Logout
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <div class="stat-value">0</div>
+                    <div class="stat-change">No change</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Books Created</h3>
+                    <div class="stat-value">0</div>
+                    <div class="stat-change">No change</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Sessions</h3>
+                    <div class="stat-value">0</div>
+                    <div class="stat-change">No change</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Revenue</h3>
+                    <div class="stat-value">$0</div>
+                    <div class="stat-change">No change</div>
+                </div>
+            </div>
+
+            <div class="content-section" style="display: block; margin-bottom: 0;">
+                <h2 class="section-title">Recent Activity</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 40px; color: #999;">No recent activity</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Books Section -->
+        <div id="books" class="content-section">
+            <h2 class="section-title">Book Management</h2>
+            <div class="search-filter">
+                <input type="text" placeholder="Search books...">
+                <button class="btn btn-primary">Search</button>
+                <button class="btn btn-success">Add New Book</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">No books found</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Images Section -->
+        <div id="images" class="content-section">
+            <h2 class="section-title">Image Management</h2>
+            <div class="search-filter">
+                <input type="text" id="imageSearchInput" placeholder="Search images...">
+                <button class="btn btn-primary" id="imageSearchBtn">Search</button>
+                <button class="btn btn-success" id="addImageBtn">Add New Image</button>
+            </div>
+            <div class="table-container">
+                <table id="imagesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="imagesTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #999;">Loading images...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+    </div>
+    <!-- End Admin Content -->
+
+    <!-- Image Modal -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add New Image</h2>
+                <span class="close" id="closeModal">&times;</span>
+            </div>
+            <form id="imageForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="imageName">Name *</label>
+                    <input type="text" id="imageName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="imageDescription">Description</label>
+                    <textarea id="imageDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="imagePrice">Price</label>
+                    <input type="number" id="imagePrice" name="price" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="imageFile">Image File *</label>
+                    <input type="file" id="imageFile" name="image" accept="image/*" required>
+                    <div id="imagePreview" style="margin-top: 10px;"></div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveImageBtn">Save Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
+

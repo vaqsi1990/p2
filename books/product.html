@@ -1,0 +1,57 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">Home / Handmade Toys / Clever Fox</div>
+
+<!-- PRODUCT -->
+<section class="product">
+  <div class="thumbs" id="thumbs"></div>
+  <div class="main-image" id="mainImage">IMG</div>
+  <div class="info">
+    <h1 id="name"></h1>
+    <div class="price">
+      <span class="old" id="oldPrice"></span>
+      <span class="new" id="price"></span>
+    </div>
+    <p id="shortDesc"></p>
+
+    <div class="cart">
+      <button onclick="qty(-1)">-</button>
+      <span id="qty">1</span>
+      <button onclick="qty(1)">+</button>
+      <button class="add">ADD TO CART</button>
+    </div>
+  </div>
+</section>
+
+<!-- TABS -->
+<section class="tabs">
+  <div class="tab-head">
+    <button class="active" onclick="tab('desc',this)">Description</button>
+    <button onclick="tab('add',this)">Additional information</button>
+    <button onclick="tab('rev',this)">Reviews</button>
+  </div>
+  <div id="desc" class="tab-content"></div>
+  <div id="add" class="tab-content" style="display:none"></div>
+  <div id="rev" class="tab-content" style="display:none"></div>
+</section>
+
+<!-- RELATED -->
+<section class="related">
+  <h2>Related products</h2>
+  <div class="related-grid" id="related"></div>
+</section>
+
+<script src="data/products.js"></script>
+<script src="js/product.js"></script>
+</body>
+</html>
