@@ -74,9 +74,21 @@ const initDatabase = async () => {
             );
         `;
         
+        const createPromoCodesTableQuery = `
+            CREATE TABLE IF NOT EXISTS promo_codes (
+                id SERIAL PRIMARY KEY,
+                code VARCHAR(6) NOT NULL UNIQUE,
+                discount_percentage DECIMAL(5, 2) NOT NULL,
+                is_active BOOLEAN DEFAULT true,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        `;
+        
         await pool.query(createBooksTableQuery);
         await pool.query(createImagesTableQuery);
         await pool.query(createOrdersTableQuery);
+        await pool.query(createPromoCodesTableQuery);
         console.log('✅ Database tables initialized');
     } catch (error) {
         console.error('❌ Error initializing database:', error.message);

@@ -92,13 +92,19 @@ document.querySelectorAll('.sidebar-menu a[data-section]').forEach(link => {
         const titles = {
             'dashboard': 'Dashboard',
             'books': 'Book Management',
-            'images': 'Image Management'
+            'images': 'Image Management',
+            'promocodes': 'Promo Codes Management'
         };
         document.getElementById('page-title').textContent = titles[sectionId] || 'Admin Panel';
         
         // Load images when images section is opened
         if (sectionId === 'images') {
             loadImages();
+        }
+        
+        // Load promo codes when promo codes section is opened
+        if (sectionId === 'promocodes') {
+            loadPromoCodes();
         }
     });
 });
@@ -361,4 +367,253 @@ function formatDate(dateString) {
 // Make functions globally available for onclick handlers
 window.editImage = editImage;
 window.deleteImage = deleteImage;
+
+// ===== Promo Codes Management Functionality =====
+let currentEditingPromoCodeId = null;
+let allPromoCodes = [];
+
+// Load all promo codes from API
+async function loadPromoCodes() {
+    const tbody = document.getElementById('promoCodesTableBody');
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">Loading promo codes...</td></tr>';
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/promocodes`);
+        const data = await response.json();
+        
+        if (data.success) {
+            allPromoCodes = data.promo_codes || [];
+            displayPromoCodes(allPromoCodes);
+        } else {
+            throw new Error(data.error || 'Failed to load promo codes');
+        }
+    } catch (error) {
+        console.error('Error loading promo codes:', error);
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; padding: 40px; color: #d32f2f;">Error loading promo codes: ${error.message}</td></tr>`;
+    }
+}
+
+// Display promo codes in table
+function displayPromoCodes(promoCodes) {
+    const tbody = document.getElementById('promoCodesTableBody');
+    
+    if (promoCodes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #999;">No promo codes found</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = promoCodes.map(promoCode => `
+        <tr>
+            <td>${promoCode.id}</td>
+            <td><strong style="font-size: 16px; color: #1a2b4a;">${escapeHtml(promoCode.code)}</strong></td>
+            <td><span style="color: #018f01; font-weight: bold;">${parseFloat(promoCode.discount_percentage).toFixed(2)}%</span></td>
+            <td>
+                <span class="badge ${promoCode.is_active ? 'badge-success' : 'badge-danger'}">
+                    ${promoCode.is_active ? 'Active' : 'Inactive'}
+                </span>
+            </td>
+            <td>${formatDate(promoCode.created_at)}</td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="editPromoCode(${promoCode.id})" style="margin-right: 5px;">Edit</button>
+                <button class="btn btn-danger btn-sm" onclick="deletePromoCode(${promoCode.id})">Delete</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Search promo codes
+function searchPromoCodes() {
+    const searchTerm = document.getElementById('promoCodeSearchInput').value.toLowerCase().trim();
+    
+    if (!searchTerm) {
+        displayPromoCodes(allPromoCodes);
+        return;
+    }
+    
+    const filtered = allPromoCodes.filter(promoCode => 
+        (promoCode.code && promoCode.code.toLowerCase().includes(searchTerm)) ||
+        (promoCode.id && promoCode.id.toString().includes(searchTerm)) ||
+        (promoCode.discount_percentage && promoCode.discount_percentage.toString().includes(searchTerm))
+    );
+    
+    displayPromoCodes(filtered);
+}
+
+// Open modal for adding new promo code
+function openAddPromoCodeModal() {
+    currentEditingPromoCodeId = null;
+    document.getElementById('promoCodeModalTitle').textContent = 'Add New Promo Code';
+    document.getElementById('promoCodeForm').reset();
+    document.getElementById('promoCodeDiscount').value = '';
+    document.getElementById('promoCodeActive').checked = true;
+    document.getElementById('promoCodeModal').classList.add('show');
+}
+
+// Edit promo code
+async function editPromoCode(id) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/promocodes/${id}`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const promoCode = data.promo_code;
+            currentEditingPromoCodeId = id;
+            
+            document.getElementById('promoCodeModalTitle').textContent = 'Edit Promo Code';
+            document.getElementById('promoCodeDiscount').value = promoCode.discount_percentage || '';
+            document.getElementById('promoCodeActive').checked = promoCode.is_active !== false;
+            
+            document.getElementById('promoCodeModal').classList.add('show');
+        } else {
+            alert('Error loading promo code: ' + (data.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error loading promo code:', error);
+        alert('Error loading promo code: ' + error.message);
+    }
+}
+
+// Delete promo code
+async function deletePromoCode(id) {
+    if (!confirm('Are you sure you want to delete this promo code? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/promocodes/${id}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Promo code deleted successfully!');
+            loadPromoCodes(); // Reload promo codes
+        } else {
+            throw new Error(data.error || 'Failed to delete promo code');
+        }
+    } catch (error) {
+        console.error('Error deleting promo code:', error);
+        alert('Error deleting promo code: ' + error.message);
+    }
+}
+
+// Handle promo code form submission
+document.getElementById('promoCodeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const discountPercentage = document.getElementById('promoCodeDiscount').value;
+    const isActive = document.getElementById('promoCodeActive').checked;
+    
+    const saveBtn = document.getElementById('savePromoCodeBtn');
+    const originalText = saveBtn.textContent;
+    
+    // Validate discount percentage
+    const discount = parseFloat(discountPercentage);
+    if (isNaN(discount) || discount < 0 || discount > 100) {
+        alert('Discount percentage must be between 0 and 100');
+        return;
+    }
+    
+    // Disable button during submission
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    
+    try {
+        const url = currentEditingPromoCodeId 
+            ? `${API_BASE_URL}/promocodes/${currentEditingPromoCodeId}`
+            : `${API_BASE_URL}/promocodes`;
+        
+        const method = currentEditingPromoCodeId ? 'PUT' : 'POST';
+        
+        // For new promo codes, don't send code - backend will auto-generate it
+        const body = currentEditingPromoCodeId
+            ? JSON.stringify({ discount_percentage: discount, is_active: isActive })
+            : JSON.stringify({ 
+                discount_percentage: discount 
+            });
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: body
+        });
+        
+        // Check if response is ok
+        if (!response.ok) {
+            // Try to get error message from response
+            let errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                // If response is not JSON, use status text
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const message = currentEditingPromoCodeId 
+                ? 'Promo code updated successfully!' 
+                : `Promo code created successfully! Code: ${data.promo_code.code}`;
+            alert(message);
+            closePromoCodeModal();
+            loadPromoCodes(); // Reload promo codes
+        } else {
+            throw new Error(data.error || 'Failed to save promo code');
+        }
+    } catch (error) {
+        console.error('Error saving promo code:', error);
+        
+        // More specific error messages
+        let errorMessage = error.message;
+        if (error.message === 'Failed to fetch') {
+            errorMessage = 'Cannot connect to server. Please make sure the backend server is running on http://localhost:3000';
+        }
+        
+        alert('Error saving promo code: ' + errorMessage);
+    } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+    }
+});
+
+// Close promo code modal
+function closePromoCodeModal() {
+    document.getElementById('promoCodeModal').classList.remove('show');
+    currentEditingPromoCodeId = null;
+    document.getElementById('promoCodeForm').reset();
+    document.getElementById('promoCodeDiscount').value = '';
+    document.getElementById('promoCodeActive').checked = true;
+}
+
+// Promo code modal close handlers
+document.getElementById('closePromoCodeModal').addEventListener('click', closePromoCodeModal);
+document.getElementById('cancelPromoCodeBtn').addEventListener('click', closePromoCodeModal);
+
+// Close modal when clicking outside
+document.getElementById('promoCodeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePromoCodeModal();
+    }
+});
+
+// Event listeners for promo code management
+document.getElementById('addPromoCodeBtn').addEventListener('click', openAddPromoCodeModal);
+document.getElementById('promoCodeSearchBtn').addEventListener('click', searchPromoCodes);
+
+// Search on Enter key
+document.getElementById('promoCodeSearchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchPromoCodes();
+    }
+});
+
+// Make functions globally available for onclick handlers
+window.editPromoCode = editPromoCode;
+window.deletePromoCode = deletePromoCode;
 

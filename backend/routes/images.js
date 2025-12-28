@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const { pool } = require('../config/database');
-const { uploadToSupabase, deleteFromSupabase } = require('../config/supabase');
+const { uploadToSupabase, deleteFromSupabase, listImagesFromSupabase, listAllImagesFromSupabase } = require('../config/supabase');
 
 // Configure multer to use memory storage (for Supabase)
 const storage = multer.memoryStorage();
@@ -267,6 +267,47 @@ router.delete('/:id', async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to delete image'
+        });
+    }
+});
+
+// Get background images from Supabase Storage
+router.get('/backgrounds', async (req, res) => {
+    try {
+        const folder = req.query.folder || 'backgrounds';
+        const limit = parseInt(req.query.limit) || 100;
+        
+        const result = await listImagesFromSupabase(folder, limit);
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('Error fetching background images:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to fetch background images'
+        });
+    }
+});
+
+// Get all images from Supabase Storage (for background selection)
+router.get('/supabase/all', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 100;
+        
+        const result = await listAllImagesFromSupabase(limit);
+        
+        res.json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error('Error fetching all images from Supabase:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to fetch images from Supabase'
         });
     }
 });

@@ -39,6 +39,9 @@
             <li><a href="#" data-section="images">
                 Images
             </a></li>
+            <li><a href="#" data-section="promocodes">
+                Promo Codes
+            </a></li>
             <li><a href="./index.html">
                 Back to Site
             </a></li>
@@ -172,6 +175,35 @@
                 </table>
             </div>
         </div>
+
+        <!-- Promo Codes Section -->
+        <div id="promocodes" class="content-section">
+            <h2 class="section-title">Promo Codes Management</h2>
+            <div class="search-filter">
+                <input type="text" id="promoCodeSearchInput" placeholder="Search promo codes...">
+                <button class="btn btn-primary" id="promoCodeSearchBtn">Search</button>
+                <button class="btn btn-success" id="addPromoCodeBtn">Add New Promo Code</button>
+            </div>
+            <div class="table-container">
+                <table id="promoCodesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Code</th>
+                            <th>Discount</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="promoCodesTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px; color: #999;">Loading promo codes...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
     </div>
     <!-- End Admin Content -->
@@ -204,6 +236,33 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancel</button>
                     <button type="submit" class="btn btn-primary" id="saveImageBtn">Save Image</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Promo Code Modal -->
+    <div class="modal" id="promoCodeModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="promoCodeModalTitle">Add New Promo Code</h2>
+                <span class="close" id="closePromoCodeModal">&times;</span>
+            </div>
+            <form id="promoCodeForm">
+                <div class="form-group">
+                    <label for="promoCodeDiscount">Discount Percentage *</label>
+                    <input type="number" id="promoCodeDiscount" name="discount_percentage" step="0.01" min="0" max="100" required>
+                    <small style="color: #666; font-size: 12px; margin-top: 5px; display: block;">Promo code will be automatically generated (6 characters: letters and digits)</small>
+                </div>
+                <div class="form-group checkbox-group">
+                    <label for="promoCodeActive" class="checkbox-label">
+                        <input type="checkbox" id="promoCodeActive" name="is_active" checked>
+                        <span>Active</span>
+                    </label>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelPromoCodeBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="savePromoCodeBtn">Save Promo Code</button>
                 </div>
             </form>
         </div>

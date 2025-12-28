@@ -101,7 +101,7 @@ router.post('/complete', async (req, res) => {
 // Generate fairy tale characters from uploaded images
 router.post('/fairy-tale-characters', async (req, res) => {
     try {
-        const { imageUrls, model } = req.body;
+        const { imageUrls, model, backgroundImageUrl } = req.body;
         
         if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
             return res.status(400).json({
@@ -111,7 +111,8 @@ router.post('/fairy-tale-characters', async (req, res) => {
         }
         
         const options = {
-            model: model || 'gemini-2.5-flash'
+            model: model || 'gemini-2.5-flash',
+            backgroundImageUrl: backgroundImageUrl || null
         };
         
         const result = await generateFairyTaleCharacters(imageUrls, options);

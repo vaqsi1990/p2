@@ -25,6 +25,16 @@
             <h1>წიგნის შექმნა</h1>
             <p class="subtitle">ატვირთეთ სურათები თქვენი წიგნისთვის</p>
 
+            <!-- Selected Background Preview (when image_id is provided) -->
+            <div id="selectedBackgroundPreview" style="display: none; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border: 2px solid #9b59b6;">
+                <h3 style="margin-top: 0; color: #9b59b6;">✓ ბექგრაუნდი ავტომატურად აირჩია</h3>
+                <p style="margin: 5px 0; color: #666;">ეს სურათი გამოყენებული იქნება ბექგრაუნდად</p>
+                <div style="margin-top: 10px;">
+                    <img id="selectedBackgroundImg" src="" alt="Selected Background" style="max-width: 300px; max-height: 200px; border-radius: 5px; border: 2px solid #9b59b6; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p id="selectedBackgroundName" style="margin-top: 10px; font-weight: bold; color: #333;"></p>
+                </div>
+            </div>
+
             <!-- Upload Area -->
             <div class="upload-area" id="uploadArea">
                 <div class="upload-content">
@@ -32,6 +42,21 @@
                     <p>PNG, JPG, GIF ფორმატები (მაქს. 10MB)</p>
                     <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
                     <button class="btn-upload" onclick="document.getElementById('fileInput').click()">აირჩიეთ ფაილები</button>
+                </div>
+            </div>
+
+            <!-- Background Selection -->
+            <div class="background-section" id="backgroundSection" style="display: none;">
+                <h2>აირჩიეთ ბექგრაუნდი (არასავალდებულო)</h2>
+                <p class="subtitle">აირჩიეთ ბექგრაუნდი Supabase-დან ან დატოვეთ ცარიელი</p>
+                <div class="background-selector">
+                    <select id="backgroundSelect" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="">ბექგრაუნდის გარეშე</option>
+                    </select>
+                    <button class="btn btn-secondary" id="loadBackgroundsBtn" style="margin-top: 10px;">ბექგრაუნდების ჩატვირთვა</button>
+                </div>
+                <div id="backgroundPreview" style="margin-top: 15px; display: none;">
+                    <img id="backgroundPreviewImg" src="" alt="Background Preview" style="max-width: 200px; max-height: 200px; border-radius: 5px; border: 2px solid #9b59b6;">
                 </div>
             </div>
 

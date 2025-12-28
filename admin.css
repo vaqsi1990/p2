@@ -421,6 +421,36 @@ table tr:hover {
     gap: 20px;
 }
 
+/* Checkbox Group */
+.checkbox-group {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: normal;
+    margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    margin-right: 10px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: #FD5932;
+}
+
+.checkbox-label span {
+    color: #1a2b4a;
+    font-size: 14px;
+    user-select: none;
+}
+
 /* Image Upload */
 .image-upload {
     border: 2px dashed #ddd;

@@ -12,6 +12,7 @@ const charactersGrid = document.getElementById('charactersGrid');
 let uploadedFiles = [];
 let uploadedImageUrls = [];
 let templateImageUrl = null;
+let backgroundImageUrl = null; // Background image from image_id parameter
 
 const API_BASE_URL = 'http://localhost:3000/api';
 
@@ -31,8 +32,17 @@ async function loadTemplateImage(imageId) {
     
     if (data.success && data.image && data.image.image_url) {
       templateImageUrl = data.image.image_url;
+      // Use this image as background for Google AI
+      backgroundImageUrl = data.image.image_url;
       
       console.log('Template image loaded:', templateImageUrl);
+      console.log('Background image set for Google AI:', backgroundImageUrl);
+      
+      // Show background preview in UI
+      showBackgroundPreview(data.image);
+      
+      // Show notification that background will be used
+      showBackgroundNotification(data.image.name || 'სურათი');
     } else {
       throw new Error('სურათი ვერ მოიძებნა');
     }
@@ -40,6 +50,49 @@ async function loadTemplateImage(imageId) {
     console.error('Error loading template image:', error);
     alert('შეცდომა ტემპლეიტის სურათის ჩატვირთვისას: ' + error.message);
   }
+}
+
+function showBackgroundPreview(image) {
+  const previewSection = document.getElementById('selectedBackgroundPreview');
+  const previewImg = document.getElementById('selectedBackgroundImg');
+  const previewName = document.getElementById('selectedBackgroundName');
+  
+  if (previewSection && previewImg && previewName) {
+    previewImg.src = image.image_url || '';
+    previewImg.alt = image.name || 'ბექგრაუნდი';
+    previewName.textContent = image.name || 'სურათი';
+    previewSection.style.display = 'block';
+  }
+}
+
+function showBackgroundNotification(imageName) {
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #9b59b6;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    z-index: 1000;
+    max-width: 300px;
+    font-size: 14px;
+  `;
+  notification.innerHTML = `
+    <strong>✓ ბექგრაუნდი ავტომატურად აირჩია</strong><br>
+    <small>${imageName} გამოყენებული იქნება ბექგრაუნდად</small>
+  `;
+  document.body.appendChild(notification);
+  
+  // Remove after 5 seconds
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.5s';
+    setTimeout(() => notification.remove(), 500);
+  }, 5000);
 }
 
 // ===== Upload handling =====
@@ -92,11 +145,18 @@ generateBtn.addEventListener('click', async () => {
     const uploadData = await uploadRes.json();
     uploadedImageUrls = uploadData.files.map(f => f.url);
 
+    // Prepare request body with background image if available
+    const requestBody = { imageUrls: uploadedImageUrls };
+    if (backgroundImageUrl) {
+      requestBody.backgroundImageUrl = backgroundImageUrl;
+      console.log('Using background image from image_id:', backgroundImageUrl);
+    }
+
     // Generate characters
     const aiRes = await fetch('http://localhost:3000/api/ai/fairy-tale-characters', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrls: uploadedImageUrls })
+      body: JSON.stringify(requestBody)
     });
 
     if (!aiRes.ok) {

@@ -127,10 +127,123 @@ const deleteFromSupabase = async (filePath) => {
     }
 };
 
+// List images from Supabase Storage (for background selection)
+const listImagesFromSupabase = async (folder = 'backgrounds', limit = 100) => {
+    try {
+        const client = getSupabaseClient();
+        
+        // List files in the specified folder
+        const { data, error } = await client.storage
+            .from('book-uploads')
+            .list(folder, {
+                limit: limit,
+                offset: 0,
+                sortBy: { column: 'created_at', order: 'desc' }
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        // Get public URLs for each file
+        const images = data
+            .filter(file => {
+                const ext = file.name.toLowerCase().split('.').pop();
+                return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext);
+            })
+            .map(file => {
+                const filePath = `${folder}/${file.name}`;
+                const { data: urlData } = client.storage
+                    .from('book-uploads')
+                    .getPublicUrl(filePath);
+                
+                return {
+                    name: file.name,
+                    path: filePath,
+                    url: urlData.publicUrl,
+                    size: file.metadata?.size || 0,
+                    created_at: file.created_at
+                };
+            });
+
+        return {
+            success: true,
+            images: images,
+            count: images.length
+        };
+    } catch (error) {
+        console.error('Error listing images from Supabase:', error);
+        throw error;
+    }
+};
+
+// List all images from Supabase (searches all folders)
+const listAllImagesFromSupabase = async (limit = 100) => {
+    try {
+        const client = getSupabaseClient();
+        const allImages = [];
+        
+        // List all files in the bucket
+        const { data: folders, error: listError } = await client.storage
+            .from('book-uploads')
+            .list('', {
+                limit: 1000
+            });
+
+        if (listError) {
+            throw listError;
+        }
+
+        // Get images from each folder
+        for (const item of folders) {
+            if (item.id) {
+                // It's a folder
+                const { data: files } = await client.storage
+                    .from('book-uploads')
+                    .list(item.name, {
+                        limit: limit
+                    });
+
+                if (files) {
+                    files.forEach(file => {
+                        const ext = file.name.toLowerCase().split('.').pop();
+                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
+                            const filePath = `${item.name}/${file.name}`;
+                            const { data: urlData } = client.storage
+                                .from('book-uploads')
+                                .getPublicUrl(filePath);
+                            
+                            allImages.push({
+                                name: file.name,
+                                path: filePath,
+                                url: urlData.publicUrl,
+                                folder: item.name,
+                                size: file.metadata?.size || 0,
+                                created_at: file.created_at
+                            });
+                        }
+                    });
+                }
+            }
+        }
+
+        return {
+            success: true,
+            images: allImages,
+            count: allImages.length
+        };
+    } catch (error) {
+        console.error('Error listing all images from Supabase:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     getSupabaseClient,
     uploadToSupabase,
     deleteFromSupabase,
-    ensureBucketExists
+    ensureBucketExists,
+    listImagesFromSupabase,
+    listAllImagesFromSupabase
 };
 
