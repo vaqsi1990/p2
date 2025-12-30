@@ -175,7 +175,10 @@ generateBtn.addEventListener('click', async () => {
     aiData.data.characters.forEach((char, i) => {
       if (!char.success || !char.generatedImageUrl) {
         const errorMsg = char.error || 'უცნობი შეცდომა';
-        charactersGrid.innerHTML += `<p style="color:red">გმირი ${i + 1} ვერ შეიქმნა: ${errorMsg}</p>`;
+        const errorCard = document.createElement('div');
+        errorCard.className = 'character-card';
+        errorCard.innerHTML = `<p style="color:red; padding: 20px; text-align: center;">გმირი ${i + 1} ვერ შეიქმნა: ${errorMsg}</p>`;
+        charactersGrid.appendChild(errorCard);
         console.error(`Character ${i + 1} failed:`, char);
         return;
       }
@@ -183,13 +186,86 @@ generateBtn.addEventListener('click', async () => {
       const card = document.createElement('div');
       card.className = 'character-card';
 
-      const img = document.createElement('img');
-      img.src = char.generatedImageUrl;
-      img.alt = `ზღაპრის გმირი ${i + 1}`;
+      // Add loading placeholder
+      const loadingDiv = document.createElement('div');
+      loadingDiv.style.cssText = 'padding: 20px; text-align: center; color: #666; min-height: 300px; display: flex; align-items: center; justify-content: center;';
+      loadingDiv.textContent = 'სურათი იტვირთება...';
+      card.appendChild(loadingDiv);
 
-      img.onerror = () => {
-        card.innerHTML = `<p style="color:red">სურათი ვერ ჩაიტვირთა</p>`;
+      // Log the URL for debugging
+      console.log(`Character ${i + 1} image URL:`, char.generatedImageUrl);
+
+      const img = document.createElement('img');
+      img.style.cssText = 'width: 100%; height: auto; min-height: 300px; object-fit: cover; display: none;';
+      img.crossOrigin = 'anonymous'; // Allow CORS
+      img.alt = `ზღაპრის გმირი ${i + 1}`;
+      img.loading = 'lazy';
+
+      // Handle pollinations.ai URLs - they might need special handling
+      let imageUrl = char.generatedImageUrl;
+      
+      // If it's a pollinations.ai URL, try to ensure it's properly formatted
+      if (imageUrl.includes('pollinations.ai')) {
+        // Pollinations URLs should work directly, but add timestamp to avoid cache issues
+        const separator = imageUrl.includes('?') ? '&' : '?';
+        imageUrl += separator + 't=' + Date.now();
+        
+        // Pollinations.ai might need a moment to generate, so we'll retry
+        console.log(`Using pollinations.ai URL for character ${i + 1}`);
+      }
+
+      // Retry logic for pollinations.ai URLs (they might need time to generate)
+      let retryCount = 0;
+      const maxRetries = 3;
+      const retryDelay = 3000; // 3 seconds
+
+      const tryLoadImage = (url) => {
+        img.src = url;
       };
+
+      img.onload = () => {
+        loadingDiv.remove(); // Remove loading text
+        img.style.display = 'block'; // Show image
+        console.log(`Character ${i + 1} image loaded successfully`);
+      };
+
+      img.onerror = (e) => {
+        retryCount++;
+        console.error(`Failed to load image for character ${i + 1} (attempt ${retryCount}):`, {
+          url: imageUrl,
+          error: e
+        });
+        
+        // Retry for pollinations.ai URLs (they might need time to generate)
+        if (imageUrl.includes('pollinations.ai') && retryCount < maxRetries) {
+          loadingDiv.textContent = `სურათი იტვირთება... (ცდა ${retryCount + 1}/${maxRetries})`;
+          // Add fresh timestamp to force new request
+          const baseUrl = imageUrl.split('&t=')[0].split('?t=')[0];
+          const separator = baseUrl.includes('?') ? '&' : '?';
+          const newUrl = baseUrl + separator + 't=' + Date.now();
+          setTimeout(() => {
+            imageUrl = newUrl;
+            tryLoadImage(newUrl);
+          }, retryDelay * retryCount);
+        } else {
+          // Show error after all retries failed
+          loadingDiv.innerHTML = `
+            <div style="padding: 20px; text-align: center;">
+              <p style="color:red; margin: 0 0 10px 0;">სურათი ვერ ჩაიტვირთა</p>
+              <a href="${char.generatedImageUrl}" target="_blank" style="color: #9b59b6; text-decoration: underline; font-size: 12px; display: inline-block; margin-top: 10px;">
+                სცადეთ პირდაპირ გახსნა
+              </a>
+              <br><br>
+              <small style="color: #999; font-size: 10px; word-break: break-all; display: block;">
+                ${char.generatedImageUrl ? char.generatedImageUrl.substring(0, 80) + '...' : 'N/A'}
+              </small>
+            </div>
+          `;
+        }
+      };
+
+      // Start loading the image
+      tryLoadImage(imageUrl);
 
       card.appendChild(img);
       charactersGrid.appendChild(card);

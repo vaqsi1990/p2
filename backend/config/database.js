@@ -99,8 +99,56 @@ const initDatabase = async () => {
     }
 };
 
+// Helper function to get image by ID from database
+const getImageById = async (imageId) => {
+    try {
+        const result = await pool.query('SELECT * FROM images WHERE id = $1', [imageId]);
+        if (result.rows.length === 0) {
+            throw new Error(`Image with ID ${imageId} not found`);
+        }
+        return result.rows[0];
+    } catch (error) {
+        console.error('Error fetching image from database:', error);
+        throw error;
+    }
+};
+
+// Helper function to get multiple images by IDs from database
+const getImagesByIds = async (imageIds) => {
+    try {
+        if (!Array.isArray(imageIds) || imageIds.length === 0) {
+            return [];
+        }
+        
+        const placeholders = imageIds.map((_, index) => `$${index + 1}`).join(', ');
+        const query = `SELECT * FROM images WHERE id IN (${placeholders}) ORDER BY id`;
+        const result = await pool.query(query, imageIds);
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching images from database:', error);
+        throw error;
+    }
+};
+
+// Helper function to get all images from database
+const getAllImages = async (limit = 100) => {
+    try {
+        const result = await pool.query(
+            'SELECT * FROM images ORDER BY created_at DESC LIMIT $1',
+            [limit]
+        );
+        return result.rows;
+    } catch (error) {
+        console.error('Error fetching all images from database:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     pool,
-    initDatabase
+    initDatabase,
+    getImageById,
+    getImagesByIds,
+    getAllImages
 };
 

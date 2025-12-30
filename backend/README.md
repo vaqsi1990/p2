@@ -93,6 +93,15 @@ The server will run on `http://localhost:3000`
 - `POST /api/ai/generate` - Generate text with AI
 - `POST /api/ai/chat` - Chat with AI (with conversation history)
 - `POST /api/ai/complete` - Complete text with AI
+- `POST /api/ai/fairy-tale-characters` - Generate fairy tale characters from image URLs
+- `POST /api/ai/replace-child` - Replace child in template image
+
+### AI with Neon Database Integration (NEW)
+- `POST /api/ai/fairy-tale-characters-from-db` - Generate fairy tale characters from images in Neon database
+- `POST /api/ai/analyze-from-db` - Analyze and generate from image stored in Neon database
+- `POST /api/ai/replace-child-from-db` - Replace child in template using images from Neon database
+
+**See [GOOGLE-AI-NEON-INTEGRATION.md](./GOOGLE-AI-NEON-INTEGRATION.md) for detailed documentation.**
 
 ### Test & Diagnostics
 - `GET /api/test/connections` - Test all connections (database, Google AI, Supabase)
@@ -128,6 +137,45 @@ The `books` table is automatically created with:
 - `created_at` (TIMESTAMP)
 - `updated_at` (TIMESTAMP)
 
+## Google AI + Neon Database Integration
+
+The backend now supports fetching images directly from Neon database for Google AI processing:
+
+1. **Store images in Neon database** - Images are stored in the `images` table with their URLs
+2. **Process with Google AI** - Use image IDs to fetch from database and process with Google AI Studio
+3. **Generate results** - Get AI-generated illustrations based on images from your database
+
+### Quick Example
+
+```javascript
+// Process images from Neon database
+const response = await fetch('http://localhost:3000/api/ai/analyze-from-db', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    imageId: 1,  // Image ID from Neon database
+    backgroundImageId: 2  // Optional background image
+  })
+});
+
+const result = await response.json();
+console.log(result.data.generatedImageUrl);
+```
+
+### Testing the Integration
+
+Run the test script to verify the integration:
+
+```bash
+node test-google-ai-neon.js
+```
+
+This will:
+- Test database connection
+- Retrieve images from Neon database
+- Test Google AI functions with database images
+- Test API endpoints
+
 ## Notes
 
 - Images are stored in Supabase Storage bucket `book-uploads`
@@ -135,3 +183,4 @@ The `books` table is automatically created with:
 - Maximum file size: 10MB per image
 - Maximum files per upload: 10
 - Supported formats: JPEG, JPG, PNG, GIF, WEBP
+- Google AI can now fetch images directly from Neon database using image IDs

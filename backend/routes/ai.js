@@ -1,6 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { generateText, chat, generateFairyTaleCharacters, replaceChildInTemplate } = require('../config/googleai');
+const { 
+    generateText, 
+    chat, 
+    generateFairyTaleCharacters, 
+    replaceChildInTemplate,
+    generateFairyTaleCharactersFromDatabase,
+    analyzeAndGenerateFromDatabase,
+    replaceChildInTemplateFromDatabase
+} = require('../config/googleai');
 
 // Generate text with Google AI
 router.post('/generate', async (req, res) => {
@@ -164,6 +172,117 @@ router.post('/replace-child', async (req, res) => {
         res.status(500).json({
             success: false,
             error: error.message || 'Failed to replace child in template'
+        });
+    }
+});
+
+// ============================================
+// NEW ENDPOINTS: Google AI with Neon Database
+// ============================================
+
+// Generate fairy tale characters from images stored in Neon database
+router.post('/fairy-tale-characters-from-db', async (req, res) => {
+    try {
+        const { imageIds, model, backgroundImageId } = req.body;
+        
+        if (!imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
+            return res.status(400).json({
+                success: false,
+                error: 'Image IDs array is required'
+            });
+        }
+        
+        const options = {
+            model: model || 'gemini-2.5-flash',
+            backgroundImageId: backgroundImageId || null
+        };
+        
+        // If backgroundImageId is provided, we need to fetch it and pass the URL
+        if (backgroundImageId) {
+            const { getImageById } = require('../config/database');
+            const backgroundImage = await getImageById(backgroundImageId);
+            options.backgroundImageUrl = backgroundImage.image_url;
+        }
+        
+        const result = await generateFairyTaleCharactersFromDatabase(imageIds, options);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: `Processed ${imageIds.length} image(s) from Neon database`
+        });
+    } catch (error) {
+        console.error('Fairy tale character generation from database error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to generate fairy tale characters from database'
+        });
+    }
+});
+
+// Analyze and generate from a single image stored in Neon database
+router.post('/analyze-from-db', async (req, res) => {
+    try {
+        const { imageId, backgroundImageId, model } = req.body;
+        
+        if (!imageId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Image ID is required'
+            });
+        }
+        
+        const result = await analyzeAndGenerateFromDatabase(imageId, backgroundImageId || null);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Image processed from Neon database successfully'
+        });
+    } catch (error) {
+        console.error('Image analysis from database error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to analyze image from database'
+        });
+    }
+});
+
+// Replace child in template using images from Neon database
+router.post('/replace-child-from-db', async (req, res) => {
+    try {
+        const { childImageId, templateImageId, model } = req.body;
+        
+        if (!childImageId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Child image ID is required'
+            });
+        }
+        
+        if (!templateImageId) {
+            return res.status(400).json({
+                success: false,
+                error: 'Template image ID is required'
+            });
+        }
+        
+        const options = {
+            model: model || 'gemini-2.5-flash'
+        };
+        
+        const result = await replaceChildInTemplateFromDatabase(childImageId, templateImageId, options);
+        
+        res.json({
+            success: true,
+            data: result,
+            message: 'Child replaced in template using images from Neon database'
+        });
+    } catch (error) {
+        console.error('Child replacement from database error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to replace child in template from database'
         });
     }
 });

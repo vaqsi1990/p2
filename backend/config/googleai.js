@@ -1,4 +1,5 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { getImageById, getImagesByIds } = require('./database');
 require('dotenv').config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
@@ -226,9 +227,31 @@ async function analyzeAndGenerate(imageUrl, backgroundImageUrl = null) {
     
     // Add prompt
     let prompt = `
-Describe the child in the image for a fairy tale illustration.
-Cartoon style, soft colors, storybook illustration.
-Do NOT include name or story.
+You are analyzing a REAL PHOTO of a child that was UPLOADED BY THE USER. This is the child that MUST be used in the final result.
+
+CRITICAL REQUIREMENTS - READ CAREFULLY:
+1. You MUST use the EXACT child from the uploaded photo
+2. The child's face, hair, clothing, and ALL features from the uploaded photo must be accurately represented in the final image
+3. DO NOT create a generic child - you MUST use the specific child from the uploaded photo
+
+DETAILED ANALYSIS REQUIRED:
+- Describe the child's face in EXACT detail: facial features, expression, hair color and style
+- Describe the child's clothing, colors, and any accessories EXACTLY as shown
+- Note the child's pose, body position, and expression
+- Describe skin tone, eye color, and any distinctive features
+- This child's appearance MUST be preserved in the final generated image
+
+Create a detailed image generation prompt that will:
+1. Create a storybook illustration of a fantasy character based on THIS SPECIFIC CHILD from the uploaded photo
+2. The character MUST have the EXACT appearance from the uploaded photo: same face, same hair, same clothing, same features
+3. Transform the child into a fairy tale character while preserving their exact appearance
+4. Use cute cartoon style, pastel colors, hand drawn, NOT realistic, safe for children
+5. The final image must show the EXACT child from the uploaded photo as a fairy tale character
+
+IMPORTANT REMINDERS:
+- This is a REAL PHOTO uploaded by the user - you MUST use this child's exact appearance
+- Do NOT create a generic or different child - use the specific child from the uploaded photo
+- The output must be a complete image generation prompt that will create a new image showing the EXACT child from the uploaded photo as a fairy tale character
 `;
     
     // If background is provided, update prompt
@@ -321,24 +344,39 @@ The output must be a complete image generation prompt that will create a new ima
     console.log(`AI description received (full): ${description}`);
     console.log(`AI description length: ${description.length} characters`);
 
-    // Generate illustration (NO REAL PHOTO)
-    let imagePrompt = `
-storybook illustration of a fantasy character,
-inspired by: ${description},
-cute cartoon style, pastel colors,
-hand drawn, NOT realistic, safe for children
-`;
-
+    // Generate illustration
+    let imagePrompt = '';
+    
     // If background was used, use the AI's detailed description directly
     if (backgroundImageUrl && backgroundBuffer) {
       // Use the AI's description directly as it should contain the full integration prompt
-      imagePrompt = description;
+      imagePrompt = description || `storybook illustration, fairy tale character, cute cartoon style, pastel colors, hand drawn, safe for children`;
       
       // Add quality and style parameters to ensure good results
-      imagePrompt += `, high quality, detailed, professional illustration, storybook style, seamless integration`;
+      if (!imagePrompt.includes('high quality')) {
+        imagePrompt += `, high quality, detailed, professional illustration, storybook style, seamless integration`;
+      }
       
       console.log('Using AI-generated integration prompt for image generation');
       console.log(`Final image generation prompt length: ${imagePrompt.length} characters`);
+    } else {
+      // No background - use the AI's description which should contain the child's exact appearance
+      // The prompt already instructed AI to create a detailed prompt for the specific child
+      imagePrompt = description || `storybook illustration of a fantasy character, cute cartoon style, pastel colors, hand drawn, NOT realistic, safe for children`;
+      
+      // Ensure quality parameters
+      if (!imagePrompt.includes('high quality')) {
+        imagePrompt += `, high quality, detailed, professional illustration, storybook style`;
+      }
+      
+      console.log('Using AI-generated prompt for child-only character generation');
+      console.log(`Final image generation prompt length: ${imagePrompt.length} characters`);
+    }
+    
+    // Final safety check - ensure imagePrompt is not empty
+    if (!imagePrompt || imagePrompt.trim().length === 0) {
+      imagePrompt = `storybook illustration of a fantasy character, cute cartoon style, pastel colors, hand drawn, NOT realistic, safe for children, high quality, detailed, professional illustration`;
+      console.warn('⚠ Image prompt was empty, using fallback prompt');
     }
 
     const imageUrlGenerated =
@@ -483,9 +521,81 @@ The output should be a detailed image generation prompt that will recreate the e
   }
 }
 
+// Generate fairy tale characters from images stored in Neon database
+async function generateFairyTaleCharactersFromDatabase(imageIds, options = {}) {
+  try {
+    // Fetch images from database
+    const images = await getImagesByIds(imageIds);
+    
+    if (images.length === 0) {
+      throw new Error('No images found in database with the provided IDs');
+    }
+    
+    // Extract image URLs from database records
+    const imageUrls = images.map(img => img.image_url);
+    
+    console.log(`Fetched ${images.length} images from Neon database`);
+    console.log(`Image IDs: ${imageIds.join(', ')}`);
+    
+    // Use existing function with the URLs
+    return await generateFairyTaleCharacters(imageUrls, options);
+  } catch (error) {
+    console.error('Error generating characters from database:', error);
+    throw error;
+  }
+}
+
+// Analyze and generate from a single image stored in Neon database
+async function analyzeAndGenerateFromDatabase(imageId, backgroundImageId = null) {
+  try {
+    // Fetch child image from database
+    const childImage = await getImageById(imageId);
+    const childImageUrl = childImage.image_url;
+    
+    console.log(`Fetched child image from Neon database: ID ${imageId}, URL: ${childImageUrl}`);
+    
+    // Fetch background image from database if provided
+    let backgroundImageUrl = null;
+    if (backgroundImageId) {
+      const backgroundImage = await getImageById(backgroundImageId);
+      backgroundImageUrl = backgroundImage.image_url;
+      console.log(`Fetched background image from Neon database: ID ${backgroundImageId}, URL: ${backgroundImageUrl}`);
+    }
+    
+    // Use existing function with the URLs
+    return await analyzeAndGenerate(childImageUrl, backgroundImageUrl);
+  } catch (error) {
+    console.error('Error analyzing image from database:', error);
+    throw error;
+  }
+}
+
+// Replace child in template using images from Neon database
+async function replaceChildInTemplateFromDatabase(childImageId, templateImageId, options = {}) {
+  try {
+    // Fetch both images from database
+    const [childImage, templateImage] = await Promise.all([
+      getImageById(childImageId),
+      getImageById(templateImageId)
+    ]);
+    
+    console.log(`Fetched child image from Neon database: ID ${childImageId}`);
+    console.log(`Fetched template image from Neon database: ID ${templateImageId}`);
+    
+    // Use existing function with the URLs
+    return await replaceChildInTemplate(childImage.image_url, templateImage.image_url, options);
+  } catch (error) {
+    console.error('Error replacing child in template from database:', error);
+    throw error;
+  }
+}
+
 module.exports = { 
   generateFairyTaleCharacters, 
   replaceChildInTemplate,
+  generateFairyTaleCharactersFromDatabase,
+  analyzeAndGenerateFromDatabase,
+  replaceChildInTemplateFromDatabase,
   getGoogleAIModel,
   generateText,
   chat,
